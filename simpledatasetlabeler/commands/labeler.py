@@ -1,15 +1,16 @@
 import argparse
-import http.server
 import mimetypes
-import os
 import pathlib
 import threading
 from simpledataset import SimpleDatasetFactory, DatasetWriter
+import flask
+import werkzeug.serving
 
 
 class DatasetManager:
     def __init__(self, dataset, output_filepath):
         self._dataset = dataset
+        self._data = dataset._data
         self._output_filepath = output_filepath
         self._image_read_lock = threading.Lock()
         self._updated = False
@@ -18,70 +19,28 @@ class DatasetManager:
         return self._dataset.labels
 
     def get_image_binary(self, index):
-        image_filepath = self._dataset[index]
+        image_filepath = self._data[index][0]
+        filename = image_filepath.split('@')[-1]
+        content_type = mimetypes.guess_type(filename)[0]
         with self._image_read_lock:
-            return self._dataset.read_image_binary(image_filepath)
+            return content_type, self._dataset.read_image_binary(image_filepath)
 
     def get_image_labels(self, index):
-        return self._dataset[index][1]
+        return self._data[index][1]
+
+    def set_image_labels(self, index, labels):
+        if not isinstance(labels, list):
+            raise RuntimeError("Invalid labels.")
+
+        self._updated = True
+        self._data[index] = self._data[index][0], labels
 
     def save(self):
         if self._updated:
-            DatasetWriter().write(self._dataset, self._output_filepath)
+            dataset = SimpleDatasetFactory().create(self._dataset.type, self._data, self._dataset.base_directory, label_names=self._dataset.labels)
+            DatasetWriter().write(dataset, self._output_filepath)
+            self._updated = False
             print(f"Saved the dataset to {self._output_filepath}")
-
-
-class RequestHandler(http.server.BaseHTTPRequestHandler):
-    manager = None
-    static_file_directory = None
-
-    def do_GET(self):
-        if self.path.startswith('/api/'):
-            self._handle_get_api()
-        else:
-            self._handle_get_file()
-
-    def do_POST(self):
-        if self.path.startswith('/api/'):
-            self._handle_post_api()
-        else:
-            self.send_response(404)
-            self.end_headers()
-
-    def _handle_post_api(self):
-        self.send_response(200)
-        self.end_headers()
-
-    def _handle_get_api(self):
-        self.send_response(200)
-        self.end_headers()
-
-    def _handle_get_file(self):
-        assert RequestHandler.static_file_directory is not None
-
-        filepath = RequestHandler.static_file_directory
-        paths = self.path.split('/') if self.path != '/' else ['index.html']
-        for p in paths:
-            if p in (os.curdir, os.pardir):
-                self.send_response(400)
-                self.end_headers()
-                return
-
-            filepath = filepath / p
-
-        if not filepath.exists() or filepath.is_dir():
-            self.send_response(404)
-            self.end_headers()
-            return
-
-        file_contents = filepath.read_bytes()
-        content_type = mimetypes.types_map.get(filepath.suffix, 'application/octet-stream')
-
-        self.send_response(200)
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', str(len(file_contents)))
-        self.end_headers()
-        self.wfile.write(file_contents)
 
 
 def serve(input_filepath, output_filepath, host, port):
@@ -89,14 +48,50 @@ def serve(input_filepath, output_filepath, host, port):
     dataset = SimpleDatasetFactory().load(input_filepath)
     dataset_manager = DatasetManager(dataset, output_filepath)
     print("Loaded.")
+    frontend_dir = pathlib.Path(__file__).parent.parent / 'frontend'
 
-    RequestHandler.manager = dataset_manager
-    RequestHandler.static_file_directory = pathlib.Path(__file__).parent.parent / 'frontend'
+    app = flask.Flask(__name__, static_url_path='', static_folder=str(frontend_dir))
 
-    httpd = http.server.ThreadingHTTPServer((host, port), RequestHandler)
+    @app.route('/')
+    def index():
+        return app.send_static_file('index.html')
+
+    @app.route('/api/labels')
+    def get_labels():
+        return flask.jsonify(dataset_manager.get_labels())
+
+    @app.route('/api/images/count')
+    def get_images():
+        return {'count': len(dataset)}
+
+    @app.route('/api/images/<int:index>')
+    def get_image_binary(index):
+        content_type, image_binary = dataset_manager.get_image_binary(index)
+        response = flask.make_response(image_binary)
+        if content_type:
+            response.headers.set('Content-Type', content_type)
+        return response
+
+    @app.route('/api/labels/<int:index>')
+    def get_image_labels(index):
+        return flask.jsonify(dataset_manager.get_image_labels(index))
+
+    @app.route('/api/labels/<int:index>', methods=['PUT'])
+    def set_image_labels(index):
+        req = flask.request.json
+        dataset_manager.set_image_labels(index, req)
+
+    @app.route('/api/save', methods=['POST'])
+    def save():
+        dataset_manager.save()
+        return {'state': 'success'}
+
+    @app.route('/api/stop', methods=['POST'])
+    def stop():
+        raise KeyboardInterrupt
+
     try:
-        print(f"Running on http://{host}:{port}/. (Ctrl-C to save and quit).")
-        httpd.serve_forever()
+        werkzeug.serving.run_simple(host, port, app)
     except KeyboardInterrupt:
         dataset_manager.save()
 
