@@ -80,6 +80,7 @@ def serve(input_filepath, output_filepath, host, port):
     def set_image_labels(index):
         req = flask.request.json
         dataset_manager.set_image_labels(index, req)
+        return {'state': 'success'}
 
     @app.route('/api/save', methods=['POST'])
     def save():
@@ -94,6 +95,7 @@ def serve(input_filepath, output_filepath, host, port):
         werkzeug.serving.run_simple(host, port, app)
     except KeyboardInterrupt:
         dataset_manager.save()
+        print("Shutting down.")
 
 
 def main():
