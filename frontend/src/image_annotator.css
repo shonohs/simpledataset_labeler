@@ -1,0 +1,28 @@
+.image_annotator_img {
+    width: 100%;
+}
+
+.annotation_box {
+    border: 1px solid red;
+    position: absolute;
+}
+
+.annotation_box_label {
+    background-color: red;
+    display: inline-block;
+    color: white;
+}
+
+.image_annotator {
+    position: relative;
+    transform-origin: top left;
+    width: 100%;
+}
+
+.image_annotator_canvas {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
