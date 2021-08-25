@@ -60,7 +60,7 @@ const KEYNAMES = {
 
 export default function ShortcutKeyView(props) {
     const label_names = useSelector(state => state.dataset.labels);
-    const [shortcut_keys, set_shortcut_keys] = useState({0: 81, 1: 87, 2: 69, 3: 82, 4: 65, 5: 83, 6: 68, 7: 70});
+    const [shortcut_keys] = useState({0: 81, 1: 87, 2: 69, 3: 82, 4: 65, 5: 83, 6: 68, 7: 70});
     const { selected_label, set_selected_label } = props;
 
     const key_shortcut_map = Object.keys(shortcut_keys).reduce((acc, key) => {acc[shortcut_keys[key]] = parseInt(key); return acc;}, {});
@@ -72,8 +72,6 @@ export default function ShortcutKeyView(props) {
             }
         }
     }, [key_shortcut_map, set_selected_label, label_names]);
-
-    console.log(props.selected_label);
 
     useEffect(() => {
         window.addEventListener("keydown", on_key_down);

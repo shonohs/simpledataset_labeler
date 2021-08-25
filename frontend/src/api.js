@@ -24,8 +24,6 @@ class Api {
 
     async put_image_labels(image_id, labels) {
         const url = this.base_url + '/api/labels/' + image_id;
-        console.log("putting");
-        console.log(labels);
         const response = await fetch(url, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(labels)});
         return response.json();
     }

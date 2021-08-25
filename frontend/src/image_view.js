@@ -31,7 +31,6 @@ export default function ImageView(props) {
                 }
             }
         }
-        console.log(e);
     }, [image_id, history, num_images]);
 
     useEffect(() => {

@@ -10,6 +10,13 @@ export const add_annotation = createAsyncThunk('labels/add_annotation', (args, {
     const new_annotations = [...existing_annotations, annotation];
     return client.put_image_labels(image_id, new_annotations);
 });
+export const remove_annotation = createAsyncThunk('labels/remove_annotation', (args, {getState}) => {
+    const {image_id, annotation} = args;
+    const existing_annotations = getState().labels[image_id];
+    const annotation_json = JSON.stringify(annotation); // I know! this is not efficient...
+    const new_annotations = existing_annotations.filter(x => JSON.stringify(x) !== annotation_json);
+    return client.put_image_labels(image_id, new_annotations);
+});
 
 const dataset_slice = createSlice({
     name: 'dataset',
@@ -40,6 +47,11 @@ const labels_slice = createSlice({
         builder.addCase(add_annotation.fulfilled, (state, action) => {
             state[action.meta.arg.image_id].push(action.meta.arg.annotation);
         });
+        builder.addCase(remove_annotation.fulfilled, (state, action) => {
+            const annotation_json = JSON.stringify(action.meta.arg.annotation);
+            const index = state[action.meta.arg.image_id].findIndex(x => JSON.stringify(x) === annotation_json);
+            state[action.meta.arg.image_id].splice(index, 1);
+        })
     }
 });
 
