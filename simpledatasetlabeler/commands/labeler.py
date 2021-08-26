@@ -89,11 +89,10 @@ def serve(input_filepath, output_filepath, host, port):
     def stop():
         raise KeyboardInterrupt
 
-    try:
-        werkzeug.serving.run_simple(host, port, app)
-    except KeyboardInterrupt:
-        dataset_manager.save()
-        print("Shutting down.")
+    werkzeug.serving.run_simple(host, port, app)
+
+    dataset_manager.save()
+    print("Shutting down.")
 
 
 def main():
