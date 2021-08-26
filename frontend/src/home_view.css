@@ -1,0 +1,17 @@
+.footer {
+    display: flex;
+    margin: 20px;
+}
+
+.footer_pagination {
+    margin-left: auto;
+}
+
+.header {
+    margin: 50px 0 10px 0;
+}
+
+.image_container > img{
+    width: 100%;
+    height: 100%;
+}
