@@ -2,8 +2,9 @@ import argparse
 import mimetypes
 import pathlib
 import threading
-from simpledataset import SimpleDatasetFactory, DatasetWriter
+import uuid
 import flask
+from simpledataset import SimpleDatasetFactory, DatasetWriter
 import werkzeug.serving
 
 
@@ -49,25 +50,22 @@ def serve(input_filepath, output_filepath, host, port):
     dataset_manager = DatasetManager(dataset, output_filepath)
     print("Loaded.")
     frontend_dir = pathlib.Path(__file__).parent.parent / 'frontend'
-
+    run_id = uuid.uuid4()
     app = flask.Flask(__name__, static_url_path='', static_folder=str(frontend_dir))
 
     @app.route('/')
     def index():
         return app.send_static_file('index.html')
 
-    @app.route('/api/labels')
-    def get_labels():
-        return flask.jsonify(dataset_manager.get_labels())
-
-    @app.route('/api/images/count')
-    def get_images():
-        return {'count': len(dataset)}
+    @app.route('/api/metadata')
+    def get_metadata():
+        return {'num_images': len(dataset), 'labels': dataset_manager.get_labels(), 'run_id': str(run_id)}
 
     @app.route('/api/images/<int:index>')
     def get_image_binary(index):
         content_type, image_binary = dataset_manager.get_image_binary(index)
         response = flask.make_response(image_binary)
+        response.cache_control.max_age = 3600 * 24
         if content_type:
             response.headers.set('Content-Type', content_type)
         return response

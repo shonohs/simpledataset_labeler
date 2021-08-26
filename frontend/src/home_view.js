@@ -2,14 +2,14 @@ import { Grid, Typography } from "@material-ui/core";
 import Pagination from "@material-ui/lab/Pagination";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import "./home_view.css";
 
 const NUM_PER_PAGE = 100;
 
-// TODO: Implement image cache.
-
 export default function HomeView(props) {
     const num_images = useSelector(state => state.dataset.num_images);
+    const run_id = useSelector(state => state.dataset.run_id);
     const [page, set_page] = useState(0);
     const start_index = page * NUM_PER_PAGE;
     const end_index = Math.min(num_images, (page + 1) * NUM_PER_PAGE);
@@ -21,7 +21,12 @@ export default function HomeView(props) {
             <Typography variant="h5">Total {num_images} images</Typography>
             </div>
             <Grid container spacing={2}>
-                {image_indexes.map((i) => <Grid item sm={3} xs={6} key={i} className="image_container"><img src={"/api/images/" + i} /></Grid>)}
+                {image_indexes.map((i) => 
+                    <Grid item sm={3} xs={6} key={i} className="image_container">
+                        <Link to={"/images/" + i}>
+                            <img src={"/api/images/" + i + "?run=" + run_id} />
+                        </Link>
+                    </Grid>)}
             </Grid>
 
             <div className="footer">

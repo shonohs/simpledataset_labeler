@@ -1,8 +1,7 @@
 import { configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import client from '../api';
 
-export const get_num_images = createAsyncThunk('dataset/get_num_images', () => client.get_num_images());
-export const get_labels = createAsyncThunk('dataset/labels', () => client.get_labels());
+export const get_metadata = createAsyncThunk('dataset/get_metadata', () => client.get_metadata());
 export const get_image_labels = createAsyncThunk('labels/get_image_labels', (image_id) => client.get_image_labels(image_id));
 export const add_annotation = createAsyncThunk('labels/add_annotation', (args, {getState}) => {
     const {image_id, annotation} = args;
@@ -20,16 +19,15 @@ export const remove_annotation = createAsyncThunk('labels/remove_annotation', (a
 
 const dataset_slice = createSlice({
     name: 'dataset',
-    initialState: {num_images: 0, labels: []},
+    initialState: {num_images: 0, labels: [], run_id: null},
     reducers: {
 
     },
     extraReducers: builder => {
-        builder.addCase(get_num_images.fulfilled, (state, action) => {
-            state.num_images = action.payload;
-        });
-        builder.addCase(get_labels.fulfilled, (state, action) => {
-            state.labels = action.payload;
+        builder.addCase(get_metadata.fulfilled, (state, action) => {
+            state.num_images = action.payload.num_images;
+            state.labels = action.payload.labels;
+            state.run_id = action.payload.run_id;
         });
     }
 });

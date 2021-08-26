@@ -3,15 +3,8 @@ class Api {
         this.base_url = base_url;
     }
 
-    async get_num_images() {
-        const url = this.base_url + '/api/images/count';
-        const response = await fetch(url);
-        const j = await response.json();
-        return j.count;
-    }
-
-    async get_labels() {
-        const url = this.base_url + '/api/labels';
+    async get_metadata() {
+        const url = this.base_url + '/api/metadata';
         const response = await fetch(url);
         return response.json();
     }

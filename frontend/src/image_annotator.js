@@ -118,6 +118,7 @@ export default function ImageAnnotator(props) {
     const [active_box, set_active_box] = useState(-1);
     const canvas_ref = useRef(null);
     const dispatch = useDispatch();
+    const run_id = useSelector(state => state.dataset.run_id);
 
     useEffect(() => {
         function resize_handler() {
@@ -150,7 +151,7 @@ export default function ImageAnnotator(props) {
 
     return (
             <div className="image_annotator">
-                <img ref={image_ref} className="image_annotator_img" src={"/api/images/" + props.image_id} onLoad={on_load} alt="annotation target" />
+                <img ref={image_ref} className="image_annotator_img" src={"/api/images/" + props.image_id + "?run=" + run_id} onLoad={on_load} alt="annotation target" />
                 <BoxCanvas canvas_ref={canvas_ref} scale={scale} width={image_width} height={image_height} image_id={props.image_id} selected_label={props.selected_label} />
                 {image_labels.map((v, i) => <AnnotationBox key={JSON.stringify(v)} annotation={v} scale={scale} image_width={image_width} image_height={image_height} background_ref={canvas_ref} active={active_box === i} set_active={() => set_active_box(i)} />)}
             </div>

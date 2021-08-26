@@ -3,7 +3,7 @@ import { Route, BrowserRouter as Router, Link, Switch } from 'react-router-dom';
 import HomeView from './home_view';
 import ImageView from './image_view';
 import { useEffect, useState } from 'react';
-import { get_labels, get_num_images } from './redux/store';
+import { get_metadata } from './redux/store';
 import { useDispatch } from 'react-redux';
 import './app.css';
 import client from './api';
@@ -12,8 +12,7 @@ import { useSnackbar } from 'notistack';
 function App() {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(get_num_images());
-    dispatch(get_labels());
+    dispatch(get_metadata());
   }, [dispatch]);
 
   const {enqueueSnackbar} = useSnackbar();
