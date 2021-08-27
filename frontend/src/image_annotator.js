@@ -75,8 +75,8 @@ function BoxCanvas(props) {
 
         if (is_active) {
             const {x, y} = e.target.getBoundingClientRect();
-            const cur_x = e.pageX - x;
-            const cur_y = e.pageY - y;
+            const cur_x = e.pageX - x - window.scrollX;
+            const cur_y = e.pageY - y - window.scrollY;
             const [start_x, start_y] = start_xy;
             draw_box(start_x, start_y, cur_x, cur_y);
         }
@@ -85,7 +85,7 @@ function BoxCanvas(props) {
     const on_mouse_down = useCallback((e) => {
         set_is_active(true);
         const {x, y} = e.target.getBoundingClientRect();
-        set_start_xy([e.pageX - x, e.pageY - y]);
+        set_start_xy([e.pageX - x - window.scrollX, e.pageY - y - window.scrollY]);
     }, [set_is_active]);
 
     const on_mouse_up = useCallback((e) => {
@@ -94,8 +94,8 @@ function BoxCanvas(props) {
             const ctx = canvas_ref.current.getContext('2d');
             ctx.clearRect(0, 0, canvas_ref.current.width, canvas_ref.current.height);
             const {x, y} = canvas_ref.current.getBoundingClientRect();
-            const cur_x = e.pageX - x;
-            const cur_y = e.pageY - y;
+            const cur_x = e.pageX - x - window.scrollX;
+            const cur_y = e.pageY - y - window.scrollY;
             const [start_x, start_y] = start_xy;
             commit_box(start_x, start_y, cur_x, cur_y);
         }
