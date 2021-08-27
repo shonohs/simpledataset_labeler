@@ -33,6 +33,12 @@ class DatasetManager:
         if not isinstance(labels, list):
             raise RuntimeError("Invalid labels.")
 
+        if labels:
+            if isinstance(labels[0], list):
+                labels = [[int(y) for y in x] for x in labels]
+            else:
+                labels = [int(x) for x in labels]
+
         self._updated = True
         self._data[index] = self._data[index][0], labels
 
@@ -44,9 +50,9 @@ class DatasetManager:
             print(f"Saved the dataset to {self._output_filepath}")
 
 
-def serve(input_filepath, output_filepath, host, port):
+def serve(dataset_type, input_filepath, output_filepath, host, port):
     print(f"Loading {input_filepath}...", end='')
-    dataset = SimpleDatasetFactory().load(input_filepath)
+    dataset = SimpleDatasetFactory().load(input_filepath, dataset_type=dataset_type)
     dataset_manager = DatasetManager(dataset, output_filepath)
     print("Loaded.")
     frontend_dir = pathlib.Path(__file__).parent.parent / 'frontend'
@@ -59,7 +65,7 @@ def serve(input_filepath, output_filepath, host, port):
 
     @app.route('/api/metadata')
     def get_metadata():
-        return {'num_images': len(dataset), 'labels': dataset_manager.get_labels(), 'run_id': str(run_id)}
+        return {'num_images': len(dataset), 'labels': dataset_manager.get_labels(), 'run_id': str(run_id), 'type': dataset_type}
 
     @app.route('/api/images/<int:index>')
     def get_image_binary(index):
@@ -99,6 +105,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input_filepath', type=pathlib.Path)
     parser.add_argument('output_filepath', type=pathlib.Path)
+    parser.add_argument('--dataset_type', '-t', choices=['image_classification', 'object_detection'])
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', '-p', default=5000, type=int)
 
@@ -107,7 +114,7 @@ def main():
     if args.output_filepath.exists():
         parser.error(f"{args.output_filepath} already exists.")
 
-    serve(args.input_filepath, args.output_filepath, args.host, args.port)
+    serve(args.dataset_type, args.input_filepath, args.output_filepath, args.host, args.port)
 
 
 if __name__ == '__main__':
