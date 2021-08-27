@@ -59,8 +59,9 @@ def serve(dataset_type, input_filepath, output_filepath, host, port):
     run_id = uuid.uuid4()
     app = flask.Flask(__name__, static_url_path='', static_folder=str(frontend_dir))
 
-    @app.route('/')
-    def index():
+    @app.route('/', defaults={'path': ''})
+    @app.route('/images/<path:path>')
+    def index(path):
         return app.send_static_file('index.html')
 
     @app.route('/api/metadata')
