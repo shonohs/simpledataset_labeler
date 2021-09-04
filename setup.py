@@ -4,7 +4,7 @@ import setuptools
 readme_filepath = pathlib.Path(__file__).parent / 'README.md'
 
 setuptools.setup(name='simpledatasetlabeler',
-                 version='0.1.0',
+                 version='0.1.1',
                  description="Simple labeling tool",
                  long_description=readme_filepath.read_text(),
                  long_description_content_type='text/markdown',
