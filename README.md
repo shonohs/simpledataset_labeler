@@ -3,6 +3,8 @@ Simple browser-based interface for dataset labeling.
 
 Currently only Object Detection task is supported.
 
+WARNING: This is work in progress. Not stable yet.
+
 ## Setup
 ```
 pip install simpledatasetlabeler
